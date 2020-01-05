@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8	
+#!/usr/bin/python3.8
 import re, string, sys
 
 def setCorpus (): # erstellt den Korpus aus den bestehenden Dateien
@@ -29,13 +29,13 @@ def incTextStuff (entry):
 		global verbs
 		verbs = verbs + 1
 	if entry.get('type') == 'ADJX':
-		global adjectives 
+		global adjectives
 		adjectives = adjectives + 1
 	if entry.get('type') == 'ADV':
-		global adverbs 
+		global adverbs
 		adverbs = adverbs + 1
 	if entry.get('type') == 'NN':
-		global nouns 
+		global nouns
 		nouns = nouns + 1
 	global sentiment
 	sentiment =+ entry.get('sentiment')
@@ -49,7 +49,7 @@ def verbalizeSentiment ():
 		verbalizedSentiment = 'eher positiv'
 	elif sentiment < -0.2:
 		verbalizedSentiment = 'sehr negativ'
-	elif sentiment < 0: 
+	elif sentiment < 0:
 		verbalizedSentiment = 'eher negativ'
 	else:
 		verbalizedSentiment = 'neutral'
@@ -110,7 +110,7 @@ def setFlags():
 				print(f'Das Argument {arg} gibt es nicht!')
 				quit()
 	return flags
-	
+
 flags = setFlags()
 
 TOP50 = ['der', 'die', 'und', 'in', 'den', 'ist', 'das', 'mit', 'zu', 'von', 'im', 'sich', 'auf', 'Die', 'für', 'ein', 'nicht', 'dem', 'des', 'es', 'eine', 'auch', 'an', 'hat', 'am', 'als', 'Der', 'aus', 'werden', 'sie', 'bei', 'dass', 'Das', 'sind', 'wird', 'nach', 'um', 'er', 'einem', 'einen', 'einer', 'wie', 'noch', 'vor', 'haben', 'zum', 'war', 'über', 'aber', 'Sie'] #haeufigste 50 Woerter nach deu_newscrawl_public_2018
@@ -146,7 +146,4 @@ for word in wordList:
 		countWord(word)
 		if flags[5]['value'] == True:
 			checkSentiment(word)
-	
 printOutput()
-			
-			
