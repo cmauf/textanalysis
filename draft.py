@@ -87,28 +87,47 @@ def printOutput():
 		print(mostCommon + ' ' + str(wordCounts[mostCommon]))
 		wordCounts.pop(mostCommon)
 def setFlags():
-	flags = [{'name': 'notops', 'short': '-t', 'value': False},
-		 {'name': 'nodecs', 'short': '-w', 'value': False},
-		 {'name': 'caching', 'short': '-c', 'value': False},
-		 {'name': 'logging', 'short': '-l', 'value': False},
-		 {'name': 'stopwords', 'short': '-o', 'value': False},
-		 {'name': 'sentiment', 'short': '-s', 'value': False},
-		 {'name': 'prompt', 'short': '-p', 'value': False}]
+	flags = [{'name': 'notops', 'short': '-t', 'value': False}, #flags[0]
+		 {'name': 'nodecs', 'short': '-w', 'value': False}, #flags[1]
+		 {'name': 'caching', 'short': '-c', 'value': False}, #flags[2]
+		 {'name': 'logging', 'short': '-l', 'value': False}, #flags[3]
+		 {'name': 'stopwords', 'short': '-o', 'value': False, 'source': ''}, #flags[4]
+		 {'name': 'sentiment', 'short': '-s', 'value': False}, #flags[5]
+		 {'name': 'prompt', 'short': '-p', 'value': False}] #flags[6]
 	args = sys.argv
 	if len(args) == 1:
 		return flags
+	consArg = ''
 	for arg in args[1:]:
 		counter = 0
-		for flag in flags:
-			counter += 1
-			if flag['short'] == arg:
-				#print('Ändere Wert von ' + flag['name'])
-				flag.update({'value': True})
-				break
-		if counter == len(flags):
-			if arg != flags[len(flags)-1]['short']:
-				print(f'Das Argument {arg} gibt es nicht!')
+		if consArg != '':
+			consArg = ''
+			continue
+		elif arg == '-o':
+			index = args.index(arg)
+			try:
+				if args[index + 1][0].isalpha():
+					consArg = args[index + 1]
+					flag = flags[4]
+					flag.update({'source': consArg})
+				else:
+					print('Geben Sie einen Dateinamen an!')
+					quit()
+			except:
+				print('Keinen Dateinamen angegeben! -o Verwendung: -o DATEINAME')
 				quit()
+					
+		else:
+			for flag in flags:
+				counter += 1
+				if flag['short'] == arg:
+					#print('Ändere Wert von ' + flag['name'])
+					flag.update({'value': True})
+					break
+			if counter == len(flags):
+				if arg != flags[len(flags)-1]['short']:
+					print(f'Das Argument {arg} gibt es nicht!')
+					quit()
 	return flags
 
 flags = setFlags()
