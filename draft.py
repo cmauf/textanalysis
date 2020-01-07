@@ -60,6 +60,8 @@ def countWord (word):
 		pass
 	elif flags[1]['value'] == True and not word.isalpha():
 		pass
+	elif flags[4]['value'] == True and word in stopwords:
+		pass
 	else:
 		if word in wordCounts:
 			wordCounts[word] += 1
@@ -86,6 +88,15 @@ def printOutput():
 		mostCommon = max(wordCounts, key = lambda outputWords: wordCounts[outputWords])
 		print(mostCommon + ' ' + str(wordCounts[mostCommon]))
 		wordCounts.pop(mostCommon)
+def setStopwords():
+	try: 
+		stopwords = open(flags[4]['source']).read().split()
+		#print(stopwords)
+		return stopwords
+	except:
+		print('Stopwortliste nicht gefunden!')
+		quit()
+
 def setFlags():
 	flags = [{'name': 'notops', 'short': '-t', 'value': False}, #flags[0]
 		 {'name': 'nodecs', 'short': '-w', 'value': False}, #flags[1]
@@ -109,6 +120,7 @@ def setFlags():
 				if args[index + 1][0].isalpha():
 					consArg = args[index + 1]
 					flag = flags[4]
+					flag.update({'value': True})
 					flag.update({'source': consArg})
 				else:
 					print('Geben Sie einen Dateinamen an!')
@@ -134,6 +146,8 @@ flags = setFlags()
 
 TOP50 = ['der', 'die', 'und', 'in', 'den', 'ist', 'das', 'mit', 'zu', 'von', 'im', 'sich', 'auf', 'Die', 'für', 'ein', 'nicht', 'dem', 'des', 'es', 'eine', 'auch', 'an', 'hat', 'am', 'als', 'Der', 'aus', 'werden', 'sie', 'bei', 'dass', 'Das', 'sind', 'wird', 'nach', 'um', 'er', 'einem', 'einen', 'einer', 'wie', 'noch', 'vor', 'haben', 'zum', 'war', 'über', 'aber', 'Sie'] #haeufigste 50 Woerter nach deu_newscrawl_public_2018
 
+if flags[4]['value'] == True:
+	stopwords = setStopwords()
 if flags[5]['value'] == True:
 	corpus = setCorpus()
 if flags[6]['value'] == True:
@@ -160,7 +174,7 @@ for word in wordList:
 	#print(word)
 	wordCounter += 1
 	word = word.strip('.,-;:!\"§$%&/?()=\'')
-	#print('analysiere ' + word)
+	p#rint('analysiere ' + word)
 	if len(word) != 0:
 		countWord(word)
 		if flags[5]['value'] == True:
