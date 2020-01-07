@@ -174,7 +174,7 @@ for word in wordList:
 	#print(word)
 	wordCounter += 1
 	word = word.strip('.,-;:!\"§$%&/?()=\'')
-	p#rint('analysiere ' + word)
+	#print('analysiere ' + word)
 	if len(word) != 0:
 		countWord(word)
 		if flags[5]['value'] == True:
