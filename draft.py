@@ -17,7 +17,11 @@ def setCorpus (): # erstellt den Korpus aus den bestehenden Dateien
 					type = splitWordType[1]
 					sentiment = temp[1]
 					variants = temp[2].split(',')
-					corpus.append(dict(baseform = baseform, type = type, sentiment = float(sentiment), variants=variants))
+					corpus.append(dict(word = baseform, type = type, sentiment = float(sentiment)))
+					for var in variants:
+						if var.isalpha():
+							corpus.append(dict(word = var, type = type, sentiment = float(sentiment)))
+						
 		#print(corpus)
 		return corpus
 	except:
@@ -72,8 +76,8 @@ def checkSentiment (word):
 	for entry in corpus:
 		#if len(word) == 0 or not word.isalpha():
 			#continue
-		if word in entry.get('variants'):
-			#print(word)
+		if word == entry.get('word'):
+			print(word)
 			incTextStuff(entry)
 		else:
 			#print(word + ' wurde nicht im Korpus gefunden')
@@ -104,7 +108,8 @@ def setFlags():
 		 {'name': 'logging', 'short': '-l', 'value': False}, #flags[3]
 		 {'name': 'stopwords', 'short': '-o', 'value': False, 'source': ''}, #flags[4]
 		 {'name': 'sentiment', 'short': '-s', 'value': False}, #flags[5]
-		 {'name': 'prompt', 'short': '-p', 'value': False}] #flags[6]
+		 {'name': 'prompt', 'short': '-p', 'value': False}, #flags[6]
+		 {'name': 'outputnumbers', 'short': '-n', 'value': False}] #flags[7]
 	args = sys.argv
 	if len(args) == 1:
 		return flags
