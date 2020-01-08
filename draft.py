@@ -94,12 +94,34 @@ def checkSentiment (word):
 		else:
 			#print(word + ' wurde nicht im Korpus gefunden')
 			continue
+def getOutputNumber():
+	allWords = len(wordCounts)
+	if flags[7]['value'] == False:
+		return int(allWords/10)
+	elif type(flags[7]['input']) is int:
+		if flags[7]['input'] > len(wordCounts):
+			tooMany = flags[7]['input']
+			print(f'Warnung: Kann nicht mehr als alle Wörter anzeigen! Zeige {allWords} statt der geforderten {tooMany}')
+			return len(wordCounts)
+		else:
+			return flags[7]['input']
+	elif type(flags[7]['input']) is str:
+		percentage = int(flags[7]['input'].strip('%'))
+		if percentage > 100:
+			print('Warnung: Kann nicht mehr als alle Wörter anzeigen!')
+			return len(wordCounts)
+		else:
+			return int(len(wordCounts)/percentage)
+	else:
+		print('Falsche Eingabe bei -n Flag!')
+		quit()
+		
 def printOutput():
 	if flags[5]['value'] == True:
 		sentiment = getSentiment()
 		output= 'Es gibt {} Woerter im Text, davon {} Adjektive, {} Adverbien, {} Verben und {} Substantive. Die Stimmung des Textes ist mit {} {}.\n'
 		print(output.format(wordCounter, adjectives, adverbs, verbs, nouns, sentiment, verbalizeSentiment()))
-	outputWords = int(len(wordCounts) / 10)
+	outputWords = getOutputNumber()
 	print(f'Die haeufigsten {outputWords} Woerter sind:\n')
 	for i in range(0, outputWords):
 		mostCommon = max(wordCounts, key = lambda outputWords: wordCounts[outputWords])
@@ -121,7 +143,8 @@ def setFlags():
 		 {'name': 'logging', 'short': '-l', 'value': False}, #flags[3]
 		 {'name': 'stopwords', 'short': '-o', 'value': False, 'source': ''}, #flags[4]
 		 {'name': 'sentiment', 'short': '-s', 'value': False}, #flags[5]
-		 {'name': 'prompt', 'short': '-p', 'value': False}] #flags[6]
+		 {'name': 'prompt', 'short': '-p', 'value': False}, #flags[6]
+		 {'name': 'outputnumbers', 'short': '-n', 'value': False, 'input': ''}] #flags[7]
 	args = sys.argv
 	if len(args) == 1:
 		return flags
@@ -145,7 +168,29 @@ def setFlags():
 			except:
 				print('Keinen Dateinamen angegeben! -o Verwendung: -o DATEINAME')
 				quit()
-					
+		elif arg == '-n':
+			index = args.index(arg)
+			try: 
+				consArg = args[index + 1]
+				if consArg[0] != '-':
+					flag = flags[7]
+					if consArg.isdigit():
+						flag.update({'value': True})
+						flag.update({'input': int(consArg)})
+					else:
+						if consArg[-1] == '%':
+							if not consArg.strip('%').isdigit():
+								print('Falsches Format für Flag -n!')
+								quit()
+							flag.update({'value': True})
+							flag.update({'input': consArg})
+						else:
+							print('Falsches Format für Flag -n!')
+							quit()
+			except Exception as e:
+				print(e)
+				quit()
+				
 		else:
 			for flag in flags:
 				counter += 1
@@ -193,7 +238,7 @@ wordCounts = dict()
 for word in wordList:
 	#print(word)
 	wordCounter += 1
-	word = word.strip('.,-;:!\"»«§$%&/?()=\'')
+	word = word.strip('.,-;:!\"»«§€$%&/?()=\'')
 	#print('analysiere ' + word)
 	if len(word) != 0:
 		countWord(word)
