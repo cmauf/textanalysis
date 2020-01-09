@@ -1,27 +1,28 @@
-#!/usr/bin/python3.8
-import re, statistics, string, sys
+import statistics
+import sys
 
-def setCorpus (): # erstellt den Korpus aus der mitgelieferten Datei
-	corpus = []
-	try: #Korpus-file existiert nicht
+
+def set_corpus():  # erstellt den Korpus aus der mitgelieferten Datei
+	init_corpus = []
+	try:  # Korpus-file existiert nicht
 		source = open('sortedCorpus.txt', encoding='utf-8')
 		buffer = source.read().split('\n')
 		for line in buffer:
 			if len(line) > 0:
 				temp = line.split('\t')
-				splitWordType = temp[0].split('|')
-				baseform = splitWordType[0]
-				type = splitWordType[1]
+				split_word_type = temp[0].split('|')
+				baseform = split_word_type[0]
+				word_type = split_word_type[1]
 				sentiment = temp[1]
 				variants = temp[2].split(',')
-				corpus.append(dict(baseform = baseform, type = type, sentiment = float(sentiment), variants=variants))
-	
-		return corpus
-	except:
+				init_corpus.append(dict(baseform=baseform, type=word_type, sentiment=float(sentiment), variants=variants))
+		return init_corpus
+	except FileNotFoundError as e:
 		print('Die Corpus-Datei ist nicht hinterlegt!')
 		quit()
 
-def incTextStuff (entry):
+
+def analyze_sentiment(entry):
 	if entry.get('type') == 'VVINF':
 		global verbs
 		verbs = verbs + 1
@@ -43,30 +44,32 @@ def incTextStuff (entry):
 		sentimentPos.append(entry.get('sentiment'))
 		posCount += 1
 
-def verbalizeSentiment ():
-	sentiment = getSentiment()
-	if sentiment > 0.3:
-		verbalizedSentiment = 'sehr positiv'
-	elif sentiment > 0.1:
-		verbalizedSentiment = 'eher positiv'
-	elif sentiment > 0:
-		verbalizedSentiment = 'leicht positiv'
-	elif sentiment < -0.1:
-		verbalizedSentiment = 'leicht negativ'
-	elif sentiment < -0.3:
-		verbalizedSentiment = 'sehr negativ'
-	elif sentiment < 0:
-		verbalizedSentiment = 'eher negativ'
-	else:
-		verbalizedSentiment = 'neutral'
-	return verbalizedSentiment
 
-def countWord (word):
-	if flags[0]['value'] == True and word in TOP50:
+def verbalize_sentiment():
+	sentiment = get_sentiment()
+	if sentiment > 0.3:
+		verbalized_sentiment = 'sehr positiv'
+	elif sentiment > 0.1:
+		verbalized_sentiment = 'eher positiv'
+	elif sentiment > 0:
+		verbalized_sentiment = 'leicht positiv'
+	elif sentiment < -0.1:
+		verbalized_sentiment = 'leicht negativ'
+	elif sentiment < -0.3:
+		verbalized_sentiment = 'sehr negativ'
+	elif sentiment < 0:
+		verbalized_sentiment = 'eher negativ'
+	else:
+		verbalized_sentiment = 'neutral'
+	return verbalized_sentiment
+
+
+def count_word(word):
+	if flags[0]['value'] is True and word in TOP50:
 		pass
-	elif flags[1]['value'] == True and not word.isalpha():
+	elif flags[1]['value'] is True and not word.isalpha():
 		pass
-	elif flags[4]['value'] == True and word in stopwords:
+	elif flags[4]['value'] is True and word in stopwords:
 		pass
 	else:
 		if word in wordCounts:
@@ -74,34 +77,40 @@ def countWord (word):
 		else:
 			wordCounts[word] = 1
 
-def getSentiment():
+
+def get_sentiment():
 	global sentimentNeg, sentimentPos, posCount, negCount
-	allWords = posCount + negCount
+	all_words = posCount + negCount
 	pos = statistics.median(sentimentPos)
 	neg = statistics.median(sentimentNeg)
-	sentiment = float(posCount)/allWords * pos + float(negCount)/allWords * neg
+	sentiment = float(posCount) / all_words * pos + float(negCount) / all_words * neg
 	sentiment = round(sentiment, 4)
-	#print(f'Es gibt {negCount} negative Woerter mit einem Score von {neg} und {posCount} positive Worter mit einem Score von {pos}. Gewichtet ergibt das einen Score von {sentiment}.')
+	# print(f'Es gibt {negCount} negative Woerter mit einem Score von {neg} und {posCount} positive Worter mit einem
+	# Score von {pos}. Gewichtet ergibt das einen Score von {sentiment}.')
 	return sentiment
 
-def checkSentiment (word):
+
+def check_sentiment(single_word):
 	for entry in corpus:
-		#if len(word) == 0 or not word.isalpha():
-			#continue
-		if word == entry.get('baseform') or word in entry.get('variants'):
-			#print(word)
-			incTextStuff(entry)
+		# if len(word) == 0 or not word.isalpha():
+		# continue
+		if single_word == entry.get('baseform') or single_word in entry.get('variants'):
+			# print(word)
+			analyze_sentiment(entry)
 		else:
-			#print(word + ' wurde nicht im Korpus gefunden')
+			# print(word + ' wurde nicht im Korpus gefunden')
 			continue
-def getOutputNumber():
-	allWords = len(wordCounts)
-	if flags[7]['value'] == False:
-		return int(allWords/10)
+
+
+def get_output_number():
+	all_words = len(wordCounts)
+	if not flags[7]['value']:
+		return int(all_words / 10)
 	elif type(flags[7]['input']) is int:
 		if flags[7]['input'] > len(wordCounts):
-			tooMany = flags[7]['input']
-			print(f'Warnung: Kann nicht mehr als alle Wörter anzeigen! Zeige {allWords} statt der geforderten {tooMany}')
+			too_many = flags[7]['input']
+			print(
+				f'Warnung: Kann nicht mehr als alle Wörter anzeigen! Zeige {all_words} statt der geforderten {too_many}')
 			return len(wordCounts)
 		else:
 			return flags[7]['input']
@@ -111,118 +120,127 @@ def getOutputNumber():
 			print('Warnung: Kann nicht mehr als alle Wörter anzeigen!')
 			return len(wordCounts)
 		else:
-			return int(len(wordCounts)/percentage)
+			return int(len(wordCounts) / percentage)
 	else:
 		print('Falsche Eingabe bei -n Flag!')
 		quit()
-		
-def printOutput():
-	if flags[5]['value'] == True:
-		sentiment = getSentiment()
-		output= 'Es gibt {} Woerter im Text, davon {} Adjektive, {} Adverbien, {} Verben und {} Substantive. Die Stimmung des Textes ist mit {} {}.\n'
-		print(output.format(wordCounter, adjectives, adverbs, verbs, nouns, sentiment, verbalizeSentiment()))
-	outputWords = getOutputNumber()
-	print(f'Die haeufigsten {outputWords} Woerter sind:\n')
-	for i in range(0, outputWords):
-		mostCommon = max(wordCounts, key = lambda outputWords: wordCounts[outputWords])
-		print(mostCommon + ' ' + str(wordCounts[mostCommon]))
-		wordCounts.pop(mostCommon)
-def setStopwords():
-	try: 
-		stopwords = open(flags[4]['source']).read().split()
-		#print(stopwords)
-		return stopwords
-	except:
+
+
+def print_output():
+	if flags[5]['value']:
+		sentiment = get_sentiment()
+		output = 'Es gibt {} Woerter im Text, davon {} Adjektive, {} Adverbien, {} Verben und {} Substantive. ' \
+				 'Die Stimmung des Textes ist mit {} {}.\n'
+		print(output.format(wordCounter, adjectives, adverbs, verbs, nouns, sentiment, verbalize_sentiment()))
+	output_words = get_output_number()
+	print(f'Die haeufigsten {output_words} Woerter sind:\n')
+	for i in range(0, output_words):
+		most_common = max(wordCounts, key=lambda output_word: wordCounts[output_word])
+		print(most_common + ' ' + str(wordCounts[most_common]))
+		wordCounts.pop(most_common)
+
+
+def set_stopwords():
+	try:
+		list_stopwords = open(flags[4]['source']).read().split()
+		# print(stopwords)
+		return list_stopwords
+	except FileNotFoundError:
 		print('Stopwortliste nicht gefunden!')
 		quit()
 
-def setFlags():
-	flags = [{'name': 'notops', 'short': '-t', 'value': False}, #flags[0]
-		 {'name': 'nodecs', 'short': '-w', 'value': False}, #flags[1]
-		 {'name': 'caching', 'short': '-c', 'value': False}, #flags[2]
-		 {'name': 'logging', 'short': '-l', 'value': False}, #flags[3]
-		 {'name': 'stopwords', 'short': '-o', 'value': False, 'source': ''}, #flags[4]
-		 {'name': 'sentiment', 'short': '-s', 'value': False}, #flags[5]
-		 {'name': 'prompt', 'short': '-p', 'value': False}, #flags[6]
-		 {'name': 'outputnumbers', 'short': '-n', 'value': False, 'input': ''}] #flags[7]
+
+def set_flags():
+	init_flags = [{'name': 'notops', 'short': '-t', 'value': False},  # flags[0]
+				  {'name': 'nodecs', 'short': '-w', 'value': False},  # flags[1]
+				  {'name': 'caching', 'short': '-c', 'value': False},  # flags[2]
+				  {'name': 'logging', 'short': '-l', 'value': False},  # flags[3]
+				  {'name': 'stopwords', 'short': '-o', 'value': False, 'source': ''},  # flags[4]
+				  {'name': 'sentiment', 'short': '-s', 'value': False},  # flags[5]
+				  {'name': 'prompt', 'short': '-p', 'value': False},  # flags[6]
+				  {'name': 'outputnumbers', 'short': '-n', 'value': False, 'input': 0}]  # flags[7]
 	args = sys.argv
 	if len(args) == 1:
-		return flags
-	consArg = ''
+		return init_flags
+	cons_arg = ''
 	for arg in args[1:]:
-		counter = 0
-		if consArg != '':
-			consArg = ''
+		if cons_arg != '':
+			cons_arg = ''
 			continue
 		elif arg == '-o':
 			index = args.index(arg)
 			try:
 				if args[index + 1][0].isalpha():
-					consArg = args[index + 1]
-					flag = flags[4]
-					flag.update({'value': True})
-					flag.update({'source': consArg})
+					cons_arg = args[index + 1]
+					init_flag = init_flags[4]
+					init_flag.update({'value': True})
+					init_flag.update({'source': cons_arg})
 				else:
 					print('Geben Sie einen Dateinamen an!')
 					quit()
-			except:
+			except IndexError:
 				print('Keinen Dateinamen angegeben! -o Verwendung: -o DATEINAME')
 				quit()
 		elif arg == '-n':
 			index = args.index(arg)
-			try: 
-				consArg = args[index + 1]
-				if consArg[0] != '-':
-					flag = flags[7]
-					if consArg.isdigit():
-						flag.update({'value': True})
-						flag.update({'input': int(consArg)})
+			try:
+				cons_arg = args[index + 1]
+				if cons_arg[0] != '-':
+					init_flag = init_flags[7]
+					if cons_arg.isdigit():
+						abs_num = int(cons_arg)
+						init_flag.update({'value': True})
+						init_flag.update({'input': abs_num})
 					else:
-						if consArg[-1] == '%':
-							if not consArg.strip('%').isdigit():
+						if cons_arg[-1] == '%':
+							if not cons_arg.strip('%').isdigit():
 								print('Falsches Format für Flag -n!')
 								quit()
-							flag.update({'value': True})
-							flag.update({'input': consArg})
+							init_flag.update({'value': True})
+							init_flag.update({'input': cons_arg})
 						else:
 							print('Falsches Format für Flag -n!')
 							quit()
-			except Exception as e:
+			except IndexError as e:
 				print(e)
 				quit()
-				
 		else:
-			for flag in flags:
+			counter = 0
+			for init_flag in init_flags:
 				counter += 1
-				if flag['short'] == arg:
-					#print('Ändere Wert von ' + flag['name'])
-					flag.update({'value': True})
+				if init_flag['short'] == arg:
+					# print('Ändere Wert von ' + flag['name'])
+					init_flag.update({'value': True})
 					break
-			if counter == len(flags):
-				if arg != flags[len(flags)-1]['short']:
+			if counter == len(init_flags):
+				if arg != init_flags[len(init_flags) - 1]['short']:
 					print(f'Das Argument {arg} gibt es nicht!')
 					quit()
-	return flags
+	return init_flags
 
-flags = setFlags()
 
-TOP50 = ['der', 'die', 'und', 'in', 'den', 'ist', 'das', 'mit', 'zu', 'von', 'im', 'sich', 'auf', 'Die', 'für', 'ein', 'nicht', 'dem', 'des', 'es', 'eine', 'auch', 'an', 'hat', 'am', 'als', 'Der', 'aus', 'werden', 'sie', 'bei', 'dass', 'Das', 'sind', 'wird', 'nach', 'um', 'er', 'einem', 'einen', 'einer', 'wie', 'noch', 'vor', 'haben', 'zum', 'war', 'über', 'aber', 'Sie'] #haeufigste 50 Woerter nach deu_newscrawl_public_2018
+flags = set_flags()
+wordList = []
+TOP50 = ['der', 'die', 'und', 'in', 'den', 'ist', 'das', 'mit', 'zu', 'von', 'im', 'sich', 'auf', 'Die', 'für', 'ein',
+		 'nicht', 'dem', 'des', 'es', 'eine', 'auch', 'an', 'hat', 'am', 'als', 'Der', 'aus', 'werden', 'sie', 'bei',
+		 'dass', 'Das', 'sind', 'wird', 'nach', 'um', 'er', 'einem', 'einen', 'einer', 'wie', 'noch', 'vor', 'haben',
+		 'zum', 'war', 'über', 'aber', 'Sie']  # haeufigste 50 Woerter nach deu_newscrawl_public_2018
 
-if flags[4]['value'] == True:
-	stopwords = setStopwords()
-if flags[5]['value'] == True:
-	corpus = setCorpus()
-if flags[6]['value'] == True:
+if flags[4]['value']:
+	stopwords = set_stopwords()
+if flags[5]['value']:
+	corpus = set_corpus()
+if flags[6]['value']:
 	sourceFile = input('Bestimmen Sie eine Datei, die ausgewertet werden soll!\n')
 	try:
-		wordList = open(sourceFile, encoding = 'utf-8').read().split()
-	except:
+		wordList = open(sourceFile, encoding='utf-8').read().split()
+	except FileNotFoundError:
 		print('Die Datei ist nicht vorhanden!')
 		quit()
 else:
 	try:
 		wordList = input().split()
-	except:
+	except BaseException:
 		print('FEHLER!')
 		quit()
 wordCounter = 0
@@ -236,13 +254,12 @@ posCount = 0
 negCount = 0
 wordCounts = dict()
 for word in wordList:
-	#print(word)
+	# print(word)
 	wordCounter += 1
 	word = word.strip('.,-;:!\"»«§€$%&/?()=\'')
-	#print('analysiere ' + word)
+	# print('analysiere ' + word)
 	if len(word) != 0:
-		countWord(word)
-		if flags[5]['value'] == True:
-			checkSentiment(word)
-printOutput()
-
+		count_word(word)
+		if flags[5]['value']:
+			check_sentiment(word)
+print_output()
